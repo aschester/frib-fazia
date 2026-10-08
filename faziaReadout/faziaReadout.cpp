@@ -42,7 +42,7 @@ void faziaReadout::SetupReadout(CExperiment *pExperiment) {
     unsigned long myPort = strtoul(pPort, &end, 0);
     if (*pPort == '\0' || *end != '\0' || myPort == 0 || myPort > 65535) {
       throw CRangeError(1, 65535, static_cast<long>(myPort),
-                        std::string(" while parsing FAZIA_PORT (got '") +
+                        std::string(" while  parsing FAZIA_PORT (got '") +
                             pPort + "')");
     }
     port = static_cast<unsigned short>(myPort);
