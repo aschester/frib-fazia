@@ -25,7 +25,7 @@ public:
    * @brief Constructor for the CUdpTrigger class.
    * @param segment The event segment to trigger on.
    */
-  explicit CUdpTrigger(CUdpEventSegment &segment) : m_segment(segment) {};
+  explicit CUdpTrigger(CUdpEventSegment &segment) : m_segment(segment){};
   /**
    * @brief Operator() to check if the trigger condition is met.
    * @return True if the trigger condition is met, false otherwise.
