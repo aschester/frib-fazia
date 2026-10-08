@@ -21,14 +21,17 @@
 /**
  * @brief Program main
  * @details
- * FAZIA writes one record per event on stdin:
- *   [8 bytes: uint64_t timestamp]
- *   [8 bytes: uint64_t evtSize]   (payload size, in bytes)
- *   [evtSize bytes: payload]
+ * FAZIA writes one record per event on stdout, which we read on stdin:
+ *   [ 8 bytes       : uint64_t timestamp ]
+ *   [ 8 bytes       : uint64_t evtSize   ]   (payload size, in bytes)
+ *   [ evtSize bytes : payload            ]
  * Each record is transformed into a PHYSICS_EVENT ring item and handed to the
  * sink selected by --sink. The sink is any NSCLDAQ sink URI understood by
  * CDataSinkFactory: '-' for stdout, 'file:///path' for a file, or
- * 'tcp://host/ringname' for a ring buffer.
+ * 'tcp://localhost/ringname' for a ring buffer.
+ * @note (ASC 10/8/26): The wire format of the FAZIA record is assumed based on
+ * tests with the FAZIA DAQ run at FRIB in September, 2026. Subject to change in
+ * the future, not documented, etc.
  * @return EXIT_SUCCESS on success, otherwise EXIT_FAILURE
  */
 int main(int argc, char *argv[]) {
@@ -48,8 +51,9 @@ int main(int argc, char *argv[]) {
       size_t n;
 
       n = io::readData(STDIN_FILENO, &timestamp, sizeof(timestamp));
-      if (n == 0)
-        continue; // Nothing written yet - wait for the next event.
+      if (n == 0) {
+        break; // Upstream closed stdin
+      }
       if (n != sizeof(timestamp)) {
         std::cerr << "ERROR: truncated timestamp field on stdin" << std::endl;
         cmdline_parser_free(&parser);
@@ -62,6 +66,8 @@ int main(int argc, char *argv[]) {
         cmdline_parser_free(&parser);
         return EXIT_FAILURE;
       }
+
+      std::cerr << timestamp << " " << evtSize << std::endl;
 
       // Source Id = 6 ("F" for Fazia) is hardcoded for now, barrier = 0 for
       // PHYSICS_EVENT data:
