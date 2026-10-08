@@ -1,6 +1,7 @@
 /**
  * @file faziaToRingBuffer.cpp
- * @brief Read FAZIA framed events on stdin, write NSCLDAQ ring items to a ringbuffer.
+ * @brief Read FAZIA framed events on stdin, write NSCLDAQ ring items to a
+ * ringbuffer.
  */
 
 #include <cstring>
@@ -8,12 +9,12 @@
 #include <memory>
 
 #include <CPhysicsEventItem.h>
-#include <DataFormat.h>
-#include <io.h>
 #include <CRingDataSink.h>
+#include <DataFormat.h>
+#include <Exception.h>
+#include <io.h>
 
-
-
+#include "faziatoringbufferargs.h"
 
 /**
  * @brief Program main
@@ -27,6 +28,11 @@
  */
 int main(int argc, char *argv[]) {
   try {
+    gengetopt_args_info parser;
+    cmdline_parser(argc, argv, &parser);
+
+    CRingDataSink sink(parser.ring_arg);
+
     while (true) {
       uint64_t timestamp;
       uint64_t evtSize;
@@ -63,11 +69,16 @@ int main(int argc, char *argv[]) {
       pItem->setBodyCursor(pBody);
       pItem->updateSize();
 
-      io::writeData(STDOUT_FILENO, pItem->getItemPointer(),
-                    pItem->getItemPointer()->s_header.s_size);
+      sink.putItem(*pItem);
     }
   } catch (int &e) {
     std::cerr << "I/O error: " << strerror(e) << std::endl;
+    return EXIT_FAILURE;
+  } catch (CException &e) {
+    std::cerr << "ERROR: NSCLDAQ exception: " << e.ReasonText() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception &e) {
+    std::cerr << "ERROR: C++ exception: " << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (...) {
     std::cerr << "ERROR: unexpected exception" << std::endl;

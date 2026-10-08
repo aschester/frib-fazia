@@ -2,17 +2,23 @@ CXX = g++
 
 CXXFLAGS = -g -O2 -Wall -I$(DAQINC)
 LDFLAGS = -L$(DAQLIB) -Wl,-rpath=$(DAQLIB)
-LDLIBS = -ldataformat -ldaqshm
+LDLIBS = -ldataformat -ldaqshm -ldaqio -lException
 
-OBJECTS=faziaToRingBuffer.o
+EXEC = faziaToRingBuffer
+OBJECTS=faziatoringbufferargs.o faziaToRingBuffer.o
 
-all: faziaToRingBuffer
+all: $(EXEC)
 
-faziaToRingBuffer: $(OBJECTS)
+$(EXEC): $(OBJECTS)
 	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+faziatoringbufferargs.o:
+	gengetopt < faziatoringbufferargs.ggo --file-name=faziatoringbufferargs
+	$(CC) -c faziatoringbufferargs.c
+
 clean:
-	rm -f faziaToRingBuffer $(OBJECTS)
+	rm -f $(EXEC) $(OBJECTS)
+	rm -f faziatoringbufferargs.c faziatoringbufferargs.h
