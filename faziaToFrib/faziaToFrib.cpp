@@ -48,8 +48,9 @@ int main(int argc, char *argv[]) {
       size_t n;
 
       n = io::readData(STDIN_FILENO, &timestamp, sizeof(timestamp));
-      if (n == 0)
-        continue; // Nothing written yet - wait for the next event.
+      if (n == 0) {
+        break; // Upstream closed stdin
+      }
       if (n != sizeof(timestamp)) {
         std::cerr << "ERROR: truncated timestamp field on stdin" << std::endl;
         cmdline_parser_free(&parser);

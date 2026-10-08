@@ -3,6 +3,7 @@
 ## Requirements
 * Debian 12 (bookworm)
 * FRIBDAQ 12.2
+* Assumes host byte order is little endian (x86_64 architecture)
 
 ## Contents
 * faziaReadout - SBS readout for FAZIA to read data directly via UDP. Untested, but its a starting point.
