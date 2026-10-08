@@ -67,24 +67,32 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
 
-      std::cerr << timestamp << " " << evtSize << std::endl;
-
       // Source Id = 6 ("F" for Fazia) is hardcoded for now, barrier = 0 for
-      // PHYSICS_EVENT data:
+      // PHYSICS_EVENT data. Note that we assume the FAZIA payload + timestamp +
+      // payload size is smaller than the default ring item maxBody = 8192:
+
       auto pItem = std::unique_ptr<CPhysicsEventItem>(
           new CPhysicsEventItem(timestamp, 6, 0));
 
-      auto pBody = reinterpret_cast<uint8_t *>(pItem->getBodyPointer());
-      n = io::readData(STDIN_FILENO, pBody, evtSize);
+      // Copy the timestamp and payload size into the ring item body:
+
+      auto pBody = reinterpret_cast<uint64_t *>(pItem->getBodyPointer());
+      *pBody++ = timestamp;
+      *pBody++ = evtSize;
+      auto pPayload = reinterpret_cast<uint8_t *>(pBody);
+
+      // Read FAZIA payload:
+
+      n = io::readData(STDIN_FILENO, pPayload, evtSize);
       if (n != evtSize) {
         std::cerr << "ERROR: truncated payload on stdin (expected " << evtSize
                   << " bytes, got " << n << ")" << std::endl;
         cmdline_parser_free(&parser);
         return EXIT_FAILURE;
       }
-      pBody += evtSize;
+      pPayload += evtSize;
 
-      pItem->setBodyCursor(pBody);
+      pItem->setBodyCursor(pPayload);
       pItem->updateSize();
 
       pSink->putItem(*pItem);
