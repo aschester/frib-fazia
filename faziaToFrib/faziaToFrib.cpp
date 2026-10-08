@@ -1,15 +1,22 @@
 /**
- * @file faziaToRingItem.cpp
- * @brief Read FAZIA framed events on stdin, write NSCLDAQ ring items to stdout.
+ * @file faziaToFrib.cpp
+ * @brief Read FAZIA framed events on stdin, write NSCLDAQ ring items to a
+ * configurable sink (ring buffer, file, or stdout).
  */
 
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <string>
 
+#include <CDataSink.h>
+#include <CDataSinkFactory.h>
 #include <CPhysicsEventItem.h>
 #include <DataFormat.h>
+#include <Exception.h>
 #include <io.h>
+
+#include "faziatofribargs.h"
 
 /**
  * @brief Program main
@@ -18,10 +25,23 @@
  *   [8 bytes: uint64_t timestamp]
  *   [8 bytes: uint64_t evtSize]   (payload size, in bytes)
  *   [evtSize bytes: payload]
+ * Each record is transformed into a PHYSICS_EVENT ring item and handed to the
+ * sink selected by --sink. The sink is any NSCLDAQ sink URI understood by
+ * CDataSinkFactory: '-' for stdout, 'file:///path' for a file, or
+ * 'tcp://host/ringname' for a ring buffer.
  * @return EXIT_SUCCESS on success, otherwise EXIT_FAILURE
  */
 int main(int argc, char *argv[]) {
+  gengetopt_args_info parser;
+  if (cmdline_parser(argc, argv, &parser) != 0) {
+    return EXIT_FAILURE;
+  }
+
   try {
+    CDataSinkFactory factory;
+    std::unique_ptr<CDataSink> pSink(
+        factory.makeSink(std::string(parser.sink_arg)));
+
     while (true) {
       uint64_t timestamp;
       uint64_t evtSize;
@@ -32,12 +52,14 @@ int main(int argc, char *argv[]) {
         continue; // Nothing written yet - wait for the next event.
       if (n != sizeof(timestamp)) {
         std::cerr << "ERROR: truncated timestamp field on stdin" << std::endl;
+        cmdline_parser_free(&parser);
         return EXIT_FAILURE;
       }
 
       n = io::readData(STDIN_FILENO, &evtSize, sizeof(evtSize));
       if (n != sizeof(evtSize)) {
         std::cerr << "ERROR: truncated size field on stdin" << std::endl;
+        cmdline_parser_free(&parser);
         return EXIT_FAILURE;
       }
 
@@ -51,6 +73,7 @@ int main(int argc, char *argv[]) {
       if (n != evtSize) {
         std::cerr << "ERROR: truncated payload on stdin (expected " << evtSize
                   << " bytes, got " << n << ")" << std::endl;
+        cmdline_parser_free(&parser);
         return EXIT_FAILURE;
       }
       pBody += evtSize;
@@ -58,16 +81,26 @@ int main(int argc, char *argv[]) {
       pItem->setBodyCursor(pBody);
       pItem->updateSize();
 
-      io::writeData(STDOUT_FILENO, pItem->getItemPointer(),
-                    pItem->getItemPointer()->s_header.s_size);
+      pSink->putItem(*pItem);
     }
   } catch (int &e) {
     std::cerr << "I/O error: " << strerror(e) << std::endl;
+    cmdline_parser_free(&parser);
+    return EXIT_FAILURE;
+  } catch (CException &e) {
+    std::cerr << "ERROR: NSCLDAQ exception: " << e.ReasonText() << std::endl;
+    cmdline_parser_free(&parser);
+    return EXIT_FAILURE;
+  } catch (std::exception &e) {
+    std::cerr << "ERROR: C++ exception: " << e.what() << std::endl;
+    cmdline_parser_free(&parser);
     return EXIT_FAILURE;
   } catch (...) {
     std::cerr << "ERROR: unexpected exception" << std::endl;
+    cmdline_parser_free(&parser);
     return EXIT_FAILURE;
   }
 
+  cmdline_parser_free(&parser);
   return EXIT_SUCCESS;
 }

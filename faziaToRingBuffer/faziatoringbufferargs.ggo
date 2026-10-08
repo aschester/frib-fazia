@@ -1,5 +1,0 @@
-package "faziaToRingBuffer"
-version "0.0.1"
-purpose "Transform FAZIA data to FRIBDAQ PHYSCIS_EVENT ring items and write to a ring buffer"
-
-option "ring" r "Ring buffer name. The ring buffer will be created if it does not exist." string
