@@ -5,8 +5,13 @@
 
 #include "faziaReadout.h"
 
+#include <arpa/inet.h>
+#include <stdexcept>
+
 #include <CExperiment.h>
+#include <CInvalidArgumentException.h>
 #include <CTimedTrigger.h>
+#include <RangeError.h>
 #include <TCLInterpreter.h>
 #include <config.h>
 
@@ -33,11 +38,24 @@ void faziaReadout::SetupReadout(CExperiment *pExperiment) {
   std::string bindAddr;        // empty = bind to all interfaces
 
   if (const char *pPort = getenv("FAZIA_PORT")) {
-    port = static_cast<unsigned short>(strtoul(pPort, nullptr, 0));
+    char *end = nullptr;
+    unsigned long myPort = strtoul(pPort, &end, 0);
+    if (*pPort == '\0' || *end != '\0' || myPort == 0 || myPort > 65535) {
+      throw CRangeError(1, 65535, static_cast<long>(myPort),
+                        std::string(" while parsing FAZIA_PORT (got '") +
+                            pPort + "')");
+    }
+    port = static_cast<unsigned short>(myPort);
   }
 
   if (const char *pIp = getenv("FAZIA_IP")) {
     bindAddr = pIp;
+    in_addr tmp;
+    if (inet_pton(AF_INET, bindAddr.c_str(), &tmp) != 1) {
+      throw CInvalidArgumentException(
+          bindAddr, " is not a valid IPv4 dotted-quad address",
+          "faziaReadout::SetupReadout - parsing FAZIA_IP");
+    }
   }
 
   uint32_t sourceId = pExperiment->getSourceId();

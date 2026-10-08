@@ -1,6 +1,6 @@
 CC=gcc
-CXX=/usr/opt/mpi/openmpi-4.1.4/bin/mpicxx -std=c++11
-CXXLD=/usr/opt/mpi/openmpi-4.1.4/bin/mpicxx
+CXX=g++
+CXXLD=g++
 CCLD=gcc
 
 COMMONFLAGS= -g -I. -I$(DAQINC) -I$(DAQINC)/sbsreadout -DHAVE_VME_MAPPING \
