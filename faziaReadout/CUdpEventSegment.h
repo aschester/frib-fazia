@@ -41,8 +41,8 @@ public:
    * @param sourceId The source ID for the event segment, used to identify the
    * source of the events in the data stream (default=0).
    */
-  CUdpEventSegment(unsigned short port, const std::string &bindAddr = "",
-                   uint32_t sourceId = 0);
+  CUdpEventSegment(unsigned short port = 50000,
+                   const std::string &bindAddr = "", uint32_t sourceId = 0);
   /** @brief Destructor for the CUdpEventSegment class. */
   virtual ~CUdpEventSegment();
 
