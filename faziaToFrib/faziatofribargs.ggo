@@ -1,0 +1,5 @@
+package "faziaToFrib"
+version "0.0.1"
+purpose "Transform FAZIA data on stdin into FRIBDAQ PHYSICS_EVENT ring items and write them to a configurable sink."
+
+option "sink" s "Destination sink as an NSCLDAQ URI: '-' for stdout, 'file:///path/to/file.evt' for a file, or 'tcp://host/ringname' for a ring buffer (created if it does not exist)." string default="-" optional
