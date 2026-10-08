@@ -13,11 +13,11 @@
  * @details
  * The CUdpTrigger class implements a UDP-based event trigger for the SBS
  * readout framework. It checks if there is data available on the UDP socket
- * associated with the event segment. The operator() method uses the select()
+ * associated with the event segment. The `operator()` method uses the `poll()`
  * system call to poll the socket for incoming data without blocking. If data is
  * available, it returns true, indicating that the trigger condition is met;
- * otherwise, it returns false. The trigger will ignore errors on poll(), return
- * false, an keep trying.
+ * otherwise, it returns false. The trigger will ignore errors on `poll()`,
+ * return false, an keep trying.
  */
 bool CUdpTrigger::operator()() {
   int fd = m_segment.getSocketFd();
