@@ -70,14 +70,21 @@ size_t CFaziaEventSegment::read(void *pBuffer, size_t maxwords) {
   }
 
   // Whole packet size, header + payload rounded up to 16-bit words if the byte
-  // count is odd. This may not be needed but (I think) its harmless:
-  size_t words = (static_cast<size_t>(n) + 1) / sizeof(uint16_t);
+  // count is odd. Odd byte is padded with zero. This may not be needed but
+  // (I think) its harmless:
+  size_t nbytes = static_cast<size_t>(n);
+  size_t words = (nbytes + 1) / sizeof(uint16_t);
   if (words > maxwords) {
     throw CRangeError(0, maxwords, words,
                       "CFaziaEventSegment::read - event too large for buffer");
   }
 
-  memcpy(pBuffer, raw, static_cast<size_t>(n));
+  memcpy(pBuffer, raw, nbytes);
+  // Zero-pad the odd byte to make it even for 16-bit word alignment:
+  if (nbytes & 1) {
+    static_cast<uint8_t *>(pBuffer)[nbytes] = 0;
+  }
+
   setSourceId(getSourceId());
   setTimestamp(timestamp);
 
