@@ -19,6 +19,8 @@
 #include "FaziaFormat.h"
 #include "faziatofribargs.h"
 
+using namespace fazia;
+
 /**
  * @brief Program main
  * @details
@@ -29,7 +31,8 @@
  * Each record is transformed into a PHYSICS_EVENT ring item and handed to the
  * sink selected by --sink. The sink is any NSCLDAQ sink URI understood by
  * CDataSinkFactory: '-' for stdout, 'file:///path' for a file, or
- * 'tcp://localhost/ringname' for a ring buffer.
+ * 'tcp://localhost/ringname' for a ring buffer (ring buffers _must_ be
+ * localhost).
  * @note (ASC 10/8/26): The wire format of the FAZIA record is assumed based on
  * tests with the FAZIA DAQ run at FRIB in September, 2026. Subject to change in
  * the future, not documented, etc.
@@ -72,7 +75,7 @@ int main(int argc, char *argv[]) {
       // PHYSICS_EVENT data:
 
       auto pItem = std::unique_ptr<CPhysicsEventItem>(
-          new CPhysicsEventItem(timestamp, 6, 0, MAX_FAZIA_EVENT_BYTES + 128));
+          new CPhysicsEventItem(timestamp, 6, 0, MAX_EVENT_BYTES + 128));
 
       // Copy the timestamp and payload size into the ring item body:
 

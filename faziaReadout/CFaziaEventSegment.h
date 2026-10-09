@@ -12,6 +12,15 @@
 
 #include <cstdint>
 
+namespace fazia {
+
+/** @brief Result of walking one FAZIA event. */
+struct ParseResult {
+  bool haveTimestamp = false; //<! A FRIB-timestamp tag was decoded
+  uint64_t timestamp = 0;     //<! Valid only when haveTimestamp
+  bool sawEnd = false;        //<! An EOE word terminated the event
+};
+
 /**
  * @class CFaziaEventSegment
  * @brief This class implements the event segment for the FAZIA detector based
@@ -21,6 +30,9 @@
  */
 
 class CFaziaEventSegment : public CUdpEventSegment {
+private:
+  uint32_t m_lastCounter;
+  bool m_haveCounter;
 
 public:
   /**
@@ -36,6 +48,7 @@ public:
                               const std::string &bindAddr = "",
                               uint32_t sourceId = 0);
 
+  virtual void onBegin();
   /**
    * @brief Reads event data from the UDP socket into the provided buffer.
    * @param pBuffer Pointer to the buffer where the event data will be stored.
@@ -44,6 +57,24 @@ public:
    * was available, or a negative value if an error occurred.
    */
   virtual size_t read(void *pBuffer, size_t maxwords);
+
+private:
+  /**
+   * @brief Check the packet counter and warn if packets are dropped.
+   * @param counter The packet counter. Compared to the last received counter.
+   */
+  void checkPacketCounter(uint32_t counter);
+  /// Walk one FAZIA event (packet counter already stripped) and report the FRIB
+  /// timestamp (if present) and whether an EOE closed the event. Static and
+  /// side-effect free, so it can be unit-tested on a captured event directly.
+  /** @brief Parse a FAZIA event and extract its metadata.
+   * @param data Pointer to the event data.
+   * @param nbytes The number of bytes in the event data.
+   * @return The result of the parsing operation.
+   */
+  ParseResult parseEvent(const uint8_t *data, std::size_t nbytes);
 };
+
+} // namespace fazia
 
 #endif
