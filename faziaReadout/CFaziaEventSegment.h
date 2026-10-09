@@ -12,6 +12,8 @@
 
 #include <cstdint>
 
+namespace fazia {
+
 /**
  * @class CFaziaEventSegment
  * @brief This class implements the event segment for the FAZIA detector based
@@ -21,6 +23,9 @@
  */
 
 class CFaziaEventSegment : public CUdpEventSegment {
+private:
+  uint32_t m_lastCounter;
+  bool m_haveCounter;
 
 public:
   /**
@@ -45,5 +50,7 @@ public:
    */
   virtual size_t read(void *pBuffer, size_t maxwords);
 };
+
+} // namespace fazia
 
 #endif

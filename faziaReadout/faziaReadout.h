@@ -13,6 +13,8 @@
 class CTclInterpreter;
 class CExperiment;
 
+namespace fazia {
+
 /**
  * @class faziaReadout
  * @brief This class implements the readout for the FAZIA detector based on the
@@ -50,5 +52,7 @@ public:
    */
   virtual void SetupStateVariables(CTCLInterpreter *pInterp);
 };
+
+} // namespace fazia
 
 #endif

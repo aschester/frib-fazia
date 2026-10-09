@@ -14,6 +14,8 @@
 
 #include "FaziaFormat.h"
 
+namespace fazia {
+
 /**
  * @details
  * Invokes CUdpEventSegment class constructor.
@@ -21,7 +23,8 @@
 CFaziaEventSegment::CFaziaEventSegment(unsigned short port,
                                        const std::string &bindAddr,
                                        uint32_t sourceId)
-    : CUdpEventSegment(port, bindAddr, sourceId) {}
+    : m_lastCounter(0), m_haveCounter(false),
+      CUdpEventSegment(port, bindAddr, sourceId) {}
 
 /**
  * @details
@@ -42,7 +45,7 @@ size_t CFaziaEventSegment::read(void *pBuffer, size_t maxwords) {
   uint64_t evtSize;
   static const size_t HEADER_SIZE = sizeof(timestamp) + sizeof(evtSize);
 
-  uint8_t raw[MAX_FAZIA_EVENT_BYTES];
+  uint8_t raw[MAX_EVENT_BYTES];
   ssize_t n = receivePacket(raw, sizeof(raw));
 
   if (n <= 0) {
@@ -90,3 +93,5 @@ size_t CFaziaEventSegment::read(void *pBuffer, size_t maxwords) {
 
   return words;
 }
+
+} // namespace fazia

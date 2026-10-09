@@ -18,7 +18,7 @@
 #include "CUdpTrigger.h"
 #include "FaziaFormat.h"
 
-CTCLApplication *gpTCLApplication = new faziaReadout;
+namespace fazia {
 
 /**
  * @details
@@ -37,7 +37,7 @@ void faziaReadout::SetupReadout(CExperiment *pExperiment) {
   // Experiment buffer size must be at least as large as the largest FAZIA event
   // we accept:
 
-  pExperiment->setBufferSize(MAX_FAZIA_EVENT_BYTES + 128);
+  pExperiment->setBufferSize(MAX_EVENT_BYTES + 128);
 
   unsigned short port = 50000; // FAZIA's default UDP port
   std::string bindAddr;        // empty = bind to all interfaces
@@ -89,3 +89,7 @@ void faziaReadout::SetupRunVariables(CTCLInterpreter *pInterp) {
 void faziaReadout::SetupStateVariables(CTCLInterpreter *pInterp) {
   CReadoutMain::SetupStateVariables(pInterp);
 }
+
+} // namespace fazia
+
+CTCLApplication *gpTCLApplication = new fazia::faziaReadout;
