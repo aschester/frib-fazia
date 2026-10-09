@@ -23,8 +23,8 @@ namespace fazia {
 CFaziaEventSegment::CFaziaEventSegment(unsigned short port,
                                        const std::string &bindAddr,
                                        uint32_t sourceId)
-    : m_lastCounter(0), m_haveCounter(false),
-      CUdpEventSegment(port, bindAddr, sourceId) {}
+    : CUdpEventSegment(port, bindAddr, sourceId), m_lastCounter(0),
+      m_haveCounter(false) {}
 
 void CFaziaEventSegment::onBegin() {
   m_lastCounter = 0;
