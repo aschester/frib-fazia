@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-fazia_test_source.py - writes FAZIA-framed test data to stdout.
+fazia_stdout_test_source.py - writes FAZIA-framed test data to stdout.
 
 Framed stream format (one record = one fragment/event):
     [ 8 bytes       : uint64_t timestamp, little-endian ]

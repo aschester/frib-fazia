@@ -6,7 +6,6 @@
 #include "faziaReadout.h"
 
 #include <arpa/inet.h>
-#include <stdexcept>
 
 #include <CExperiment.h>
 #include <CInvalidArgumentException.h>
@@ -38,7 +37,7 @@ void faziaReadout::SetupReadout(CExperiment *pExperiment) {
   // Experiment buffer size must be at least as large as the largest FAZIA event
   // we accept:
 
-  pExperiment->setBufferSize(MAX_FAZIA_EVENT_BYTES);
+  pExperiment->setBufferSize(MAX_FAZIA_EVENT_BYTES + 128);
 
   unsigned short port = 50000; // FAZIA's default UDP port
   std::string bindAddr;        // empty = bind to all interfaces
