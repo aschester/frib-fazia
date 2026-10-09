@@ -16,6 +16,7 @@
 #include <Exception.h>
 #include <io.h>
 
+#include "FaziaFormat.h"
 #include "faziatofribargs.h"
 
 /**
@@ -68,11 +69,10 @@ int main(int argc, char *argv[]) {
       }
 
       // Source Id = 6 ("F" for Fazia) is hardcoded for now, barrier = 0 for
-      // PHYSICS_EVENT data. Note that we assume the FAZIA payload + timestamp +
-      // payload size is smaller than the default ring item maxBody = 8192:
+      // PHYSICS_EVENT data:
 
       auto pItem = std::unique_ptr<CPhysicsEventItem>(
-          new CPhysicsEventItem(timestamp, 6, 0));
+          new CPhysicsEventItem(timestamp, 6, 0, MAX_FAZIA_EVENT_BYTES + 128));
 
       // Copy the timestamp and payload size into the ring item body:
 

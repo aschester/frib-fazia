@@ -12,7 +12,7 @@
 
 #include <RangeError.h>
 
-static const size_t MAXPACKET = 65536; //<! Max possible UDP datagram bytes.
+#include "FaziaFormat.h"
 
 /**
  * @details
@@ -42,7 +42,7 @@ size_t CFaziaEventSegment::read(void *pBuffer, size_t maxwords) {
   uint64_t evtSize;
   static const size_t HEADER_SIZE = sizeof(timestamp) + sizeof(evtSize);
 
-  uint8_t raw[MAXPACKET];
+  uint8_t raw[MAX_FAZIA_EVENT_BYTES];
   ssize_t n = receivePacket(raw, sizeof(raw));
 
   if (n <= 0) {
