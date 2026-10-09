@@ -3,7 +3,7 @@ CXX=g++
 CXXLD=g++
 CCLD=gcc
 
-COMMONFLAGS= -g -I. -I$(DAQINC) -I$(DAQINC)/sbsreadout -DHAVE_VME_MAPPING \
+COMMONFLAGS= -g -I. -I.. -I$(DAQINC) -I$(DAQINC)/sbsreadout -DHAVE_VME_MAPPING \
 -DHAVE_SBSVME_INTERFACE -I/usr/include/tcl8.6 -I/usr/include/tcl8.6 -pthread
 
 USERCCFLAGS=

@@ -1,7 +1,7 @@
 CXX = g++
 CC = gcc
 
-CXXFLAGS = -g -O2 -Wall -I$(DAQINC)
+CXXFLAGS = -g -O2 -Wall -I$(DAQINC) -I..
 LDFLAGS = -L$(DAQLIB) -Wl,-rpath=$(DAQLIB)
 LDLIBS = -ldataformat -ldaqshm -ldaqio -lException
 
