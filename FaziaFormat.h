@@ -10,7 +10,7 @@ namespace fazia {
 //<! Largest FAZIA event we accept, in bytes. IPv4 caps a single UDP payload at
 //<! 65507 bytes; 65536 (64 KiB) rounds up and is the most any recvfrom()
 //<! delivers.
-static constexpr std::size_t MAX_EVENT_BYTES = 65536;
+inline constexpr std::size_t MAX_EVENT_BYTES = 65536;
 
 /** @namespace fazia::format */
 namespace format {
@@ -20,7 +20,7 @@ namespace format {
 // (w & MASK) == VALUE; mask widths differ because types use 1/4/5/8 ident.
 // bits.
 
-inline constexpr std::size_t WORD = sizeof(uint16_t);
+inline constexpr size_t WORD = sizeof(uint16_t);
 
 inline constexpr uint16_t MSB_MASK = 0x8000; // bit[15]: 0 = DATA
 inline constexpr uint16_t DATA_VALUE = 0x0000;
@@ -51,7 +51,7 @@ inline constexpr uint16_t BLKID_MASK = 0x07FF;  // BLKHDR field
 inline constexpr uint16_t TAG_FRIB_TS = 0x7300;
 
 inline constexpr unsigned TS_BITS_PER_WORD = 15;
-inline constexpr std::size_t TRIGGER_WORDS = 3; // fixed: TELHDR..DETHDR gap
+inline constexpr size_t TRIGGER_WORDS = 3; // fixed: TELHDR..DETHDR gap
 
 } // namespace format
 } // namespace fazia
