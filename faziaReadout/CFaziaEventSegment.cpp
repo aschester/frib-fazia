@@ -46,7 +46,72 @@ void CFaziaEventSegment::onBegin() {
  * size is larger than the buffer size and is wrapped across multiple UDP
  * packets.
  */
-size_t CFaziaEventSegment::read(void *pBuffer, size_t maxwords) { return 1; }
+size_t CFaziaEventSegment::read(void *pBuffer, size_t maxwords) {
+  uint8_t raw[MAX_EVENT_BYTES];
+  uint32_t counter = 0;
+
+  ssize_t n = receivePacket(raw, sizeof(raw));
+  if (n <= 0) {
+    reject();
+    return 0;
+  }
+  size_t nbytes = static_cast<size_t>(n);
+
+  if (nbytes < sizeof(uint32_t)) {
+    std::cerr << "fazia::CFaziaEventSegment: datagram too short for counter ("
+              << nbytes << " bytes) - dropped" << std::endl;
+    reject();
+    return 0;
+  }
+
+  // Check for packet continuity and warn if packets are dropped. The counter is
+  // the first 4 bytes of the datagram:
+
+  std::memcpy(&counter, raw, sizeof(counter));
+  checkPacketCounter(counter);
+
+  // Parse the FAZIA words (after the 4-byte counter) for FRIB timestamp + EOE:
+
+  ParseResult p = parseEvent(raw + sizeof(counter), nbytes - sizeof(counter));
+
+  if (!p.haveTimestamp) {
+    std::cerr << "fazia::CFaziaEventSegment: no FRIB timestamp in datagram "
+                 "(counter "
+              << counter << ", " << nbytes << " bytes) - dropped" << std::endl;
+    reject();
+    return 0; // Device keeps running; just skip this event
+  }
+
+  if (!p.sawEnd) {
+    // No EOE before end of datagram: event likely spans datagrams (not yet
+    // handled) or data is corrupt. We have a valid timestamp, so emit with a
+    // warning. Change to reject()/return 0 to drop these instead.
+    // TODO(reassembly): accumulate across datagrams, split on EOE, and bound
+    // the accumulator so a never-arriving EOE can't grow without limit.
+    std::cerr << "fazia::CFaziaEventSegment: no EOE in datagram (counter "
+              << counter << ") - possible multi-datagram event; emitting as-is"
+              << std::endl;
+  }
+
+  // Whole datagram (counter + padding + words) becomes the ring-item body so
+  // downstream can strip it and use the counter for diagnostics:
+
+  size_t words = (nbytes + 1) / sizeof(uint16_t);
+  if (words > maxwords) {
+    throw CRangeError(
+        0, maxwords, words,
+        "fazia::CFaziaEventSegment::read - event too large for buffer");
+  }
+  std::memcpy(pBuffer, raw, nbytes);
+  if (nbytes & 1) {
+    static_cast<uint8_t *>(pBuffer)[nbytes] = 0; // Zero the odd byte
+  }
+
+  setSourceId(getSourceId());
+  setTimestamp(p.timestamp);
+
+  return words;
+}
 
 ///
 // Private functions
@@ -87,12 +152,14 @@ ParseResult CFaziaEventSegment::parseEvent(const uint8_t *data,
     }
 
     if ((w & format::NIBBLE_MASK) == format::TAG_VALUE) {
-      if (i + 1 >= nwords)
+      if (i + 1 >= nwords) {
         break;
+      }
       const std::size_t taglen = data[i + 1];
       const std::size_t payload = i + 2;
-      if (payload + taglen > nwords)
+      if (payload + taglen > nwords) {
         break;
+      }
       if (w == format::TAG_FRIB_TS && !result.haveTimestamp) {
         uint64_t value = 0;
         for (std::size_t k = 0; k < taglen; ++k)
