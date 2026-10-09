@@ -168,10 +168,11 @@ ParseResult CFaziaEventSegment::parseEvent(const void *data,
       continue;
     }
 
-    // We have a tag. If its an FRIB timestamp tag, extract the payload as a
-    // 15-bit-per-word value as the docs say:
-
     if ((w & format::NIBBLE_MASK) == format::TAG_VALUE) {
+
+      // We have a tag. If its an FRIB timestamp tag, extract the payload as a
+      // 15-bit-per-word value as the docs say:
+
       if (i + 1 >= nwords) {
         break;
       }
