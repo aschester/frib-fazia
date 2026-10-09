@@ -132,7 +132,17 @@ void CFaziaEventSegment::checkPacketCounter(uint32_t counter) {
 /**
  * @details
  * Walk one FAZIA event (packet counter already stripped) and report the FRIB
- * timestamp (if present) and whether an EOE closed the event.
+ * timestamp (if present) and whether an EOE closed the event. Some special
+ * cases to consider:
+ * - TELHDR..DETHDR gap: The TELHDR header is followed by 3 words of trigger
+ *   information before the DETHDR header. This gap is skipped over when
+ *   parsing. The TELHDR trigger words are explicitly skipped, DETHDR just falls
+ *   though as a normal header.
+ * - Padding: The PADDING word (0x8080) is ignored and skipped over when
+ *   parsing.
+ * - Tags: The TAG_FRIB_TS tag (0x7300) is used to extract the FRIB timestamp.
+ *   All other tags are ignored. The tag length is determined by the word
+ *   following the tag header, and the payload is extracted accordingly
  */
 ParseResult CFaziaEventSegment::parseEvent(const void *data,
                                            std::size_t nbytes) {
@@ -150,7 +160,7 @@ ParseResult CFaziaEventSegment::parseEvent(const void *data,
       break;
     }
     if (w == format::PADDING) {
-      ++i;
+      i++;
       continue;
     }
     if ((w & format::HDR5_MASK) == format::TELHDR_VALUE) {
@@ -158,12 +168,15 @@ ParseResult CFaziaEventSegment::parseEvent(const void *data,
       continue;
     }
 
+    // We have a tag. If its an FRIB timestamp tag, extract the payload as a
+    // 15-bit-per-word value as the docs say:
+
     if ((w & format::NIBBLE_MASK) == format::TAG_VALUE) {
       if (i + 1 >= nwords) {
         break;
       }
-      const size_t taglen = data16[i + 1];
-      const size_t payload = i + 2;
+      const size_t taglen = data16[i + 1]; // In 16-bit words
+      const size_t payload = i + 2; // Index of the start of the tag's payload
       if (payload + taglen > nwords) {
         break;
       }
@@ -175,10 +188,14 @@ ParseResult CFaziaEventSegment::parseEvent(const void *data,
         result.timestamp = value;
         result.haveTimestamp = true;
       }
-      i = payload + taglen;
+      //
+      // More tags could be handled here if needed, but for now we just skip
+      // over them.
+      //
+      i = payload + taglen; // Index in the data after the tag's payload
       continue;
     }
-    i++;
+    i++; // Fallthrough: skip this word
   }
 
   return result;
