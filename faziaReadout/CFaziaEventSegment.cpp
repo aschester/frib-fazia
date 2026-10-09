@@ -34,14 +34,13 @@ void CFaziaEventSegment::onBegin() {
 
 /**
  * @details
- * Reads event data from the UDP socket into the provided buffer. It first
- * receives a packet from the socket, checks if the packet is large enough to
- * contain the header, and then extracts the timestamp and event size from
- * the header. It verifies that the event size matches the actual payload
- * received. If everything is valid, it copies the entire packet (header +
- * payload) into the provided buffer, sets the source ID and timestamp for the
- * event, and returns the number of 16-bit words read into the buffer. If any
- * checks fail, it rejects the event and returns 0.
+ * Read data from the UDP socket into the provided buffer. The method first
+ * receives a packet from the socket, checks for packet continuity using a
+ * counter, and then parses the FAZIA words to extract the FRIB timestamp and
+ * check for the end of the event (EOE). If the event is larger than the
+ * provided buffer, a CRangeError exception is thrown. The method returns the
+ * number of 16-bit words read into the buffer, or 0 if no data was available,
+ * rejected, etc.
  * @todo (ASC 9/9/26): Need to figure out how to handle the case where the event
  * size is larger than the buffer size and is wrapped across multiple UDP
  * packets.
