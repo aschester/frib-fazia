@@ -57,7 +57,7 @@ size_t CFaziaEventSegment::read(void *pBuffer, size_t maxwords) {
   }
   size_t nbytes = static_cast<size_t>(n);
 
-  if (nbytes < sizeof(uint32_t)) {
+  if (nbytes < sizeof(counter)) {
     std::cerr << "fazia::CFaziaEventSegment: datagram too short for counter ("
               << nbytes << " bytes) - dropped" << std::endl;
     reject();
@@ -129,14 +129,21 @@ void CFaziaEventSegment::checkPacketCounter(uint32_t counter) {
   m_haveCounter = true;
 }
 
-ParseResult CFaziaEventSegment::parseEvent(const uint8_t *data,
+/**
+ * @details
+ * Walk one FAZIA event (packet counter already stripped) and report the FRIB
+ * timestamp (if present) and whether an EOE closed the event.
+ */
+ParseResult CFaziaEventSegment::parseEvent(const void *data,
                                            std::size_t nbytes) {
-  ParseResult result;
-  size_t i = 0;
+
+  const uint16_t *data16 = static_cast<const uint16_t *>(data);
   size_t nwords = nbytes / sizeof(uint16_t);
 
+  ParseResult result;
+  size_t i = 0;
   while (i < nwords) {
-    const uint16_t w = data[i];
+    const uint16_t w = data16[i];
 
     if ((w & format::EOE_MASK) == format::EOE_VALUE) {
       result.sawEnd = true;
@@ -155,22 +162,23 @@ ParseResult CFaziaEventSegment::parseEvent(const uint8_t *data,
       if (i + 1 >= nwords) {
         break;
       }
-      const std::size_t taglen = data[i + 1];
-      const std::size_t payload = i + 2;
+      const size_t taglen = data16[i + 1];
+      const size_t payload = i + 2;
       if (payload + taglen > nwords) {
         break;
       }
       if (w == format::TAG_FRIB_TS && !result.haveTimestamp) {
         uint64_t value = 0;
-        for (std::size_t k = 0; k < taglen; ++k)
-          value = (value << format::TS_BITS_PER_WORD) | data[payload + k];
+        for (size_t j = 0; j < taglen; j++) {
+          value = (value << format::TS_BITS_PER_WORD) | data16[payload + j];
+        }
         result.timestamp = value;
         result.haveTimestamp = true;
       }
       i = payload + taglen;
       continue;
     }
-    ++i;
+    i++;
   }
 
   return result;

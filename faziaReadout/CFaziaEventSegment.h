@@ -72,7 +72,7 @@ private:
    * @param nbytes The number of bytes in the event data.
    * @return The result of the parsing operation.
    */
-  ParseResult parseEvent(const uint8_t *data, std::size_t nbytes);
+  ParseResult parseEvent(const void *data, std::size_t nbytes);
 };
 
 } // namespace fazia
