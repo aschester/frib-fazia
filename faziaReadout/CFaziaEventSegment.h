@@ -64,9 +64,6 @@ private:
    * @param counter The packet counter. Compared to the last received counter.
    */
   void checkPacketCounter(uint32_t counter);
-  /// Walk one FAZIA event (packet counter already stripped) and report the FRIB
-  /// timestamp (if present) and whether an EOE closed the event. Static and
-  /// side-effect free, so it can be unit-tested on a captured event directly.
   /** @brief Parse a FAZIA event and extract its metadata.
    * @param data Pointer to the event data.
    * @param nbytes The number of bytes in the event data.
