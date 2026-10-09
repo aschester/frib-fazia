@@ -19,6 +19,8 @@
 #include "FaziaFormat.h"
 #include "faziatofribargs.h"
 
+using namespace fazia;
+
 /**
  * @brief Program main
  * @details
@@ -72,7 +74,7 @@ int main(int argc, char *argv[]) {
       // PHYSICS_EVENT data:
 
       auto pItem = std::unique_ptr<CPhysicsEventItem>(
-          new CPhysicsEventItem(timestamp, 6, 0, MAX_FAZIA_EVENT_BYTES + 128));
+          new CPhysicsEventItem(timestamp, 6, 0, MAX_EVENT_BYTES + 128));
 
       // Copy the timestamp and payload size into the ring item body:
 
